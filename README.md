@@ -3,7 +3,13 @@
 GNMIStub is a simple library for GNMI Subscriptions.
 Will be later enhanced to support Get.
 
-Sample usage:
+- Pre-Requisites:
+
+Compile proto file to python code. See below how to do it:
+
+https://community.cisco.com/t5/service-providers-documents/understanding-gnmi-on-ios-xr-with-python/ta-p/4014205
+
+- Sample usage:
 
 ```
 from GNMIStub import GNMIStub
