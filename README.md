@@ -1,5 +1,8 @@
 # GNMIStub
 
+GNMIStub is a simple library for GNMI Subscriptions.
+Will be later enhanced to support Get.
+
 Sample usage:
 
 ```
