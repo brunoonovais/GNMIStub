@@ -126,3 +126,26 @@ class GNMIStub:
 
     def _subscribe_to_path(self, request):
         yield request
+    
+    def get(self, models=None, display=True) -> List:
+
+        try:
+            self._setup_credentials()
+            self.channel = grpc.secure_channel(':'.join([self.ip, self.port]), self.credentials, self.options)
+            grpc.channel_ready_future(self.channel).result(timeout=30)
+            self.gnmi_stub = gNMIStub(self.channel)
+
+            if models:
+                self.path_list = [self._create_gnmi_path(model) for model in models]
+            else:
+                self.path_list = [self._create_gnmi_path(model) for model in self.models]
+            self.get_message = GetRequest(path=self.path_list, type=0, encoding=4)
+            _output = self.gnmi_stub.Get(self.get_message, metadata=self.metadata)
+
+            for notification in _output.notification:
+                for update in notification.update:
+                    val = update.val.json_ietf_val
+                    print(val)
+
+        except grpc.FutureTimeoutError as e:
+            print(f"Timeout to {self.ip}. Exception:\n\n{e}")
