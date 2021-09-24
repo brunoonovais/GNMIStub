@@ -1,25 +1,14 @@
+## Author: Bruno Novais ##
+## This uses the gnmi-proto module https://pypi.org/project/gnmi-proto/ ##
+
 from typing import List
 import grpc
 import json
 import re
 import time
-from protos.gnmi_pb2_grpc import gNMIStub
-from protos.gnmi_pb2 import (
-    GetRequest,
-    GetResponse,
-    Path,
-    PathElem,
-    Encoding,
-    SetRequest,
-    Update,
-    TypedValue,
-    SetResponse,
-    Notification,
-    Subscription,
-    SubscriptionMode,
-    SubscriptionList,
-    SubscribeRequest
-)
+import gnmi.proto
+import gnmi.proto.legacy
+import grpclib.client
 
 class GNMIStub:
     """
@@ -69,7 +58,7 @@ class GNMIStub:
         self.subscription_list: List = []
 
     @staticmethod
-    def _create_gnmi_path(path) -> Path:
+    def _create_gnmi_path(path) -> gnmi.proto.legacy.Path:
         path_elements = []
         if path[0] == '/':
             if path[-1] == '/':
@@ -89,15 +78,15 @@ class GNMIStub:
             #print(f'elem_keys = {elem_keys}')
             dict_keys = dict(x.split('=', 1) for x in elem_keys)
             #print(f'dict_keys = {dict_keys}')
-            path_elements.append(PathElem(name=elem_name, key=dict_keys))
-        return Path(elem=path_elements)
+            path_elements.append(gnmi.proto.legacy.PathElem(name=elem_name, key=dict_keys))
+        return gnmi.proto.legacy.Path(elem=path_elements)
 
     def connect(self) -> None:
         try:
             self._setup_credentials()
             self.channel = grpc.secure_channel(':'.join([self.ip, self.port]), self.credentials, self.options)
             grpc.channel_ready_future(self.channel).result(timeout=30)
-            self.gnmi_stub = gNMIStub(self.channel)
+            self.gnmi_stub = gnmi.proto.legacy.gNMIStub(self.channel)
             self._create_subscriptions(self.models)
             self._create_subscription_list()
     
@@ -113,16 +102,16 @@ class GNMIStub:
         # for each model we will create a subscription and append to subscription_list
         for _model in models:
             self._path = self._create_gnmi_path(_model)
-            self._sub_mode = SubscriptionMode.Value(self.mode)
-            self._subscription = Subscription(path=self._path, mode=self._sub_mode, sample_interval=self.sample_interval*1000000000)
+            self._sub_mode = gnmi.proto.legacy.SubscriptionMode.Value(self.mode)
+            self._subscription = gnmi.proto.legacy.Subscription(path=self._path, mode=self._sub_mode, sample_interval=self.sample_interval*1000000000)
             self.subscription_list.append(self._subscription)
     
     def _create_subscription_list(self):
-        self.gnmi_subscription_list_mode = SubscriptionList.Mode.Value(self.stream)
-        self.gnmi_encoding = Encoding.Value(self.encoding)
-        self.gnmi_subscription_list = SubscriptionList(subscription=self.subscription_list,
+        self.gnmi_subscription_list_mode = gnmi.proto.legacy.SubscriptionList.Mode.Value(self.stream)
+        self.gnmi_encoding = gnmi.proto.legacy.Encoding.Value(self.encoding)
+        self.gnmi_subscription_list = gnmi.proto.legacy.SubscriptionList(subscription=self.subscription_list,
                                                        mode=self.gnmi_subscription_list_mode)
-        self.gnmi_subscribe_request = SubscribeRequest(subscribe=self.gnmi_subscription_list)
+        self.gnmi_subscribe_request = gnmi.proto.legacy.SubscribeRequest(subscribe=self.gnmi_subscription_list)
 
     def _subscribe_to_path(self, request):
         yield request
@@ -133,13 +122,13 @@ class GNMIStub:
             self._setup_credentials()
             self.channel = grpc.secure_channel(':'.join([self.ip, self.port]), self.credentials, self.options)
             grpc.channel_ready_future(self.channel).result(timeout=30)
-            self.gnmi_stub = gNMIStub(self.channel)
+            self.gnmi_stub = gnmi.proto.legacy.gNMIStub(self.channel)
 
             if models:
                 self.path_list = [self._create_gnmi_path(model) for model in models]
             else:
                 self.path_list = [self._create_gnmi_path(model) for model in self.models]
-            self.get_message = GetRequest(path=self.path_list, type=0, encoding=4)
+            self.get_message = gnmi.proto.legacy.GetRequest(path=self.path_list, type=0, encoding=4)
             _output = self.gnmi_stub.Get(self.get_message, metadata=self.metadata)
 
             for notification in _output.notification:
