@@ -5,9 +5,10 @@ Will be later enhanced to support Get.
 
 - Pre-Requisites:
 
-Compile proto file to python code. See below how to do it:
+Introduction to GNMI: https://community.cisco.com/t5/service-providers-documents/understanding-gnmi-on-ios-xr-with-python/ta-p/4014205
+To install libraries:
 
-https://community.cisco.com/t5/service-providers-documents/understanding-gnmi-on-ios-xr-with-python/ta-p/4014205
+```pip install gnmi-proto grpcio-tools```
 
 - Sample usage:
 
